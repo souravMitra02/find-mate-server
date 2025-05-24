@@ -33,7 +33,7 @@ async function run() {
         res.send(listings);
     });
 
-    // POST new listing
+    // POST new listing for website
     app.post('/listings', async (req, res) => {
       const newListing = req.body;
       const result = await postsCollection.insertOne(newListing);
