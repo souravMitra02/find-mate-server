@@ -57,6 +57,27 @@ async function run() {
         res.send(userListings);
     });
 
+app.put('/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+ 
+    const result = await postsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+    res.send(result);
+});
+
+    app.get('/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+ 
+    const result = await postsCollection.findOne(
+      { _id: new ObjectId(id) },
+    );
+    res.send(result);
+});
+
     app.delete('/listings/:id', async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
