@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require('dotenv').config()
 const express = require("express");
 const cors = require("cors");
@@ -7,7 +7,6 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-
 
 const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ssk8yog.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -19,48 +18,59 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-const postsCollection = client.db("roommateFinderDB").collection("posts");
+    const postsCollection = client.db("roommateFinderDB").collection("posts");
 
-    // Your Express App (e.g., routes/posts.js)
+    // GET all listings for Browse Listings page
+    app.get("/listings", async (req, res) => {
+     
+        const listings = await postsCollection.find().toArray();
+        res.send(listings);
+    });
+
+    // POST new listing
+    app.post('/listings', async (req, res) => {
+      const newListing = req.body;
+      const result = await postsCollection.insertOne(newListing);
+      res.send(result);
+    });
+
+    // Featured listings (example)
+    app.get("/featured", async (req, res) => {
+      const result = await postsCollection
+        .find({ availability: "available" })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
 
 
+    app.get("/my-listings", async (req, res) => {
+      const userEmail = req.query.email;
+      if (!userEmail) {
+        return 
+      }
+        const userListings = await postsCollection.find({ userEmail }).toArray();
+        res.send(userListings);
+    });
 
-
-
-app.get("/featured", async (req, res) => {
-    const result = await postsCollection
-      .find({ availability: "available" })
-      .limit(6)
-      .toArray();
-    res.send(result);
+    app.delete('/listings/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await postsCollection.deleteOne(query);
+  res.send(result);
 });
 
-  app.post('/listings', async (req, res) => {
-  const newListing = req.body;
-  const result = await postsCollection.insertOne(newListing);
-  res.send(result);
-});  
-
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
 run().catch(console.dir);
-
-
-
-
-
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -69,6 +79,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-// Ucm53DU74N13nKrlv
-
