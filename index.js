@@ -8,7 +8,6 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-console.log(process.env.DB_USER);
 
 const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ssk8yog.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -20,11 +19,32 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+const postsCollection = client.db("roommateFinderDB").collection("posts");
+
+    // Your Express App (e.g., routes/posts.js)
+
+
+
+
+
+app.get("/featured", async (req, res) => {
+    const result = await postsCollection
+      .find({ availability: "available" })
+      .limit(6)
+      .toArray();
+    res.send(result);
+});
+
+  app.post('/listings', async (req, res) => {
+  const newListing = req.body;
+  const result = await postsCollection.insertOne(newListing);
+  res.send(result);
+});  
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
